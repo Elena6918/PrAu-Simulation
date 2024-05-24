@@ -221,28 +221,30 @@ def calculate_num_colluder_metrics():
         mean = np.mean(num)
         variance = np.var(num)
         print(filename+" mean: "+str(mean)+" var: "+str(variance))
-        
-epsilon = 10
-num_accusations = [1000, 5000, 10000]
-candidates = read_json("1M_UIDs.json")
 
-for num_accusation in num_accusations:
-    num_colluders = []
-    # estimate and adjust n_values based on epsilon and num_accusation
-    if num_accusation == 1000:
-        n_values = range(1, 10)
-    if num_accusation == 5000:
-        n_values = range(3, 15)
-    if num_accusation == 10000:
-        n_values = range(15, 35)
-    for i in range(5):
-        for n in n_values:
-            flag = find_high_ppv(candidates, epsilon , n, [num_accusation])
-            print((n, flag))
-            if flag == 1:
-                num_colluders.append(n)
-                break
-    write_json(num_colluders, "num_colluders/e"+str(epsilon)+"_top_"+str(num_accusation)+".json")
+# trial and error 
+def smallest_number():     
+    epsilon = 10
+    num_accusations = [1000, 5000, 10000]
+    candidates = read_json("1M_UIDs.json")
+
+    for num_accusation in num_accusations:
+        num_colluders = []
+        # estimate and adjust n_values based on epsilon and num_accusation
+        if num_accusation == 1000:
+            n_values = range(1, 10)
+        if num_accusation == 5000:
+            n_values = range(3, 15)
+        if num_accusation == 10000:
+            n_values = range(15, 35)
+        for i in range(5):
+            for n in n_values:
+                flag = find_high_ppv(candidates, epsilon , n, [num_accusation])
+                print((n, flag))
+                if flag == 1:
+                    num_colluders.append(n)
+                    break
+        write_json(num_colluders, "num_colluders/e"+str(epsilon)+"_top_"+str(num_accusation)+".json")
 
 # after finish all simulations
 calculate_num_colluder_metrics()

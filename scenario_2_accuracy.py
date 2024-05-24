@@ -9,7 +9,7 @@ n_values = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 # l_1 = 2**16
 k_values = [2, 100, 1000, 10000, 100000, 1000000] #number of candidate users
 epsilon = 1
-color_map = plt.colormaps['summer']
+color_map = plt.get_cmap('summer')
 
 def midpoint_rule_approximation_positive(L, m, k):
   delta_x = L / m

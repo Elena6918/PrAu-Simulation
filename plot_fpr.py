@@ -29,9 +29,9 @@ def plot_top_k(accusation_values, epsilon, color_map, n):
         total_simulation_fprs[str(pool_size)] = []
     for num_accusation in accusation_values:
         # convert naming 
-        if num_accusation == 9:
-            name = "0.009"
-        elif num_accusation < 1000:
+        # if num_accusation == 9:
+        #     name = "0.009"
+        if num_accusation < 1000:
             name = str(num_accusation * 0.001)
         else:
             name = str(int(num_accusation*0.001))
@@ -40,6 +40,8 @@ def plot_top_k(accusation_values, epsilon, color_map, n):
         try:
             metrics = read_json("metrics_"+epsilon+"/metrics_"+epsilon+"_"+name+"K_accusations.json")
         except:
+            print(num_accusation)
+            print(name)
             print("metrics_"+epsilon+"/metrics_"+epsilon+"_"+name+"K_accusations.json does not exist.")
 
         for pool_size, simulations in metrics.items():
@@ -107,8 +109,8 @@ for simulation in simulations:
 plt.plot(simulations, random_guess_fpr_100K, linestyle='--', label = 'pool size=100K (random guess)', color="navy")
 plt.plot(simulations, random_guess_fpr_500K, linestyle='--', label = 'pool size=500K (random guess)', color="blue")
 plt.plot(simulations, random_guess_fpr_1M, linestyle='--', label = 'pool size=1M (random guess)', color="lightblue")
-plot_top_k(accusation_values, "e1", plt.colormaps['summer'], n)
-plot_top_k(accusation_values, "e10", plt.colormaps['spring'], n)
+plot_top_k(accusation_values, "e1", plt.get_cmap('summer'), n)
+plot_top_k(accusation_values, "e10", plt.get_cmap('spring'), n)
 
 plt.xlabel('Number of Accusations', fontsize=12)
 plt.ylabel('FPR', fontsize=12)
@@ -119,6 +121,5 @@ plt.ylim(0, 0.001)
 
 y_ticks = [0.0, 0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007, 0.0008, 0.0009, 0.001]
 plt.yticks(y_ticks, ['0.0000', '0.0001', '0.0002','0.0003','0.0004','0.0005','0.0006','0.0007','0.0008','0.0009','0.0010',])
-# plt.savefig("FPR_n"+str(n)+"_top_k_extended.pdf")
+plt.savefig("FPR_n"+str(n)+"_top_k_extended.pdf")
 # plt.show()
-plt.savefig("test.pdf")
