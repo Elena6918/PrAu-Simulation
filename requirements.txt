@@ -1,0 +1,6 @@
+bitarray
+matplotlib
+mmh3
+mpmath
+numpy
+scipy

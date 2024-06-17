@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 
+
 def calculate_fpr(fp, tn):
   return fp / (fp+tn)
 
@@ -28,11 +29,8 @@ def plot_top_k(accusation_values, epsilon, color_map, n):
     for pool_size in pool_values:
         total_simulation_fprs[str(pool_size)] = []
     for num_accusation in accusation_values:
-        # convert naming 
-        # if num_accusation == 9:
-        #     name = "0.009"
         if num_accusation < 1000:
-            name = str(num_accusation * 0.001)
+            name = str(num_accusation/1000)
         else:
             name = str(int(num_accusation*0.001))
 
