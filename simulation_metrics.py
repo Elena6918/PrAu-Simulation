@@ -8,6 +8,7 @@ import hashlib
 from bitarray import bitarray
 import json
 import time
+import argparse
 
 l_1 = 65536
 
@@ -119,7 +120,7 @@ def predict(user_score, num_accusations):
     predict_visited = [item[0] for item in sorted_scores[:num_accusations]]
     return predict_visited
 
-def calculate_metrics(user_visited, predict_visited):
+def calculate_metrics(user_visited, predict_visited, candidates, num_user_visit):
     tp = len(user_visited.intersection(predict_visited))
     tn = len(candidates) - len(user_visited.union(predict_visited))
     fp = len(predict_visited) - tp
@@ -148,75 +149,94 @@ def generate_1M_UIDs():
     print(f"Execution time: {elapsed_time:.2f} seconds")
 
 ####################################################################
-# Define constants
-color_map = plt.colormaps['summer']
-pool_values = [100000, 500000, 1000000]
-num_simulation = 5
-num_bits = 201000
-num_hashes = 20
-num_user_visit = 10000  # number of insertions, assume 10K user visits
-epsilon = 10 
-n_values = range(1, 21) # adjust according to epsilon
-# n_values = range(5, 125, 5)
-num_accusations = 10000 # adjust according to need
+def run_simulations(epsilon, num_accusations):
+    # Define constants
+    color_map = plt.colormaps['summer']
+    pool_values = [100000, 500000, 1000000]
+    num_simulation = 5
+    num_bits = 201000
+    num_hashes = 20
+    num_user_visit = 10000  # number of insertions, assume 10K user visits
+    epsilon = 10 
+    if epsilon == 10:
+        n_values = range(1, 21) # adjust according to epsilon
+    if epsilon == 1:
+        n_values = range(5, 125, 5)
+    # num_accusations = 10000 # adjust according to need
 
-start_time = time.time()
+    start_time = time.time()
 
-candidate_uids = generate_unique_uids()
+    # candidate_uids = generate_unique_uids()
 
-inter_state = {}
-inter_state["UID_visited"] = []
-tps, tns, fps, fns = [], [], [], []
-metrics = {} # save metrics of simulation results
+    inter_state = {}
+    inter_state["UID_visited"] = []
+    tps, tns, fps, fns = [], [], [], []
+    metrics = {} # save metrics of simulation results
 
-for idx, pool in enumerate(pool_values):
-  tp = Counter()
-  tn = Counter()
-  fp = Counter()
-  fn = Counter()
-  candidates = generate_unique_uids(pool)
-  bloom_filter = BloomFilter(num_bits, num_hashes)
-  user_hash = {}
-  collision = 0
-  for user in candidates:
-    hash = bloom_filter.add(user)
-    user_hash[user] = hash 
-  user_visited = simulate_visit(candidates)
+    for idx, pool in enumerate(pool_values):
+        tp = Counter()
+        tn = Counter()
+        fp = Counter()
+        fn = Counter()
+        candidates = generate_unique_uids(pool)
+        bloom_filter = BloomFilter(num_bits, num_hashes)
+        user_hash = {}
+        collision = 0
+        for user in candidates:
+            hash = bloom_filter.add(user)
+            user_hash[user] = hash 
+        user_visited = simulate_visit(candidates, num_user_visit)
 
-  metrics[pool] = []
-  inter_state[pool] = []
-  for n in n_values:
-      print(n)
-      for _ in range(num_simulation):
-          kv_pair = np.zeros(num_bits)
-          report(user_visited, user_hash, n)
-          noisy_vector = query(kv_pair)
-          user_score = generate_user_score(noisy_vector, candidates, user_hash, n)  
+        metrics[pool] = []
+        inter_state[pool] = []
+        for n in n_values:
+            print(n)
+            for _ in range(num_simulation):
+                kv_pair = np.zeros(num_bits)
+                kv_pair = report(user_visited, user_hash, n, kv_pair, num_hashes)
+                noisy_vector = query(kv_pair, num_bits, epsilon)
+                user_score = generate_user_score(noisy_vector, candidates, user_hash, n, epsilon, num_hashes)  
 
-          predict_visited = predict(user_score, num_accusations)
-          current_tp, current_tn, current_fp, current_fn = calculate_metrics(user_visited, set(predict_visited))
-          tp[n] += current_tp
-          tn[n] += current_tn
-          fp[n] += current_fp
-          fn[n] += current_fn
-          metrics[pool].append((n, [current_tp, current_tn, current_fp, current_fn]))
-          inter_state[pool].append((n, user_score))
-          inter_state["UID_visited"].append((pool, list(user_visited)))
-  
-  name = str(pool)
+                predict_visited = predict(user_score, num_accusations)
+                current_tp, current_tn, current_fp, current_fn = calculate_metrics(user_visited, set(predict_visited), candidates, num_user_visit)
+                tp[n] += current_tp
+                tn[n] += current_tn
+                fp[n] += current_fp
+                fn[n] += current_fn
+                metrics[pool].append((n, [current_tp, current_tn, current_fp, current_fn]))
+                # inter_state[pool].append((n, user_score))
+                # inter_state["UID_visited"].append((pool, list(user_visited)))
+        
+        name = str(pool)
 
-file_path = "metrics_e10_10K_accusations.json"
-with open(file_path, "w") as file:
-    json.dump(metrics, file)
-print(f"Metrics saved to {file_path}")
+    file_path = "temp/metrics_e"+str(epsilon)+"_"+str(num_accusations / 1000)+"K_accusations.json"
+    with open(file_path, "w") as file:
+        json.dump(metrics, file)
+    print(f"Metrics saved to {file_path}")
 
 
-file_path = "interstate_e10.json"
-with open(file_path, "w") as file:
-    json.dump(inter_state, file)
-print(f"Interstate saved to {file_path}")
+    # file_path = "interstate_e"+str(epsilon)+".json"
+    # with open(file_path, "w") as file:
+    #     json.dump(inter_state, file)
+    # print(f"Interstate saved to {file_path}")
 
-end_time = time.time()
+    end_time = time.time()
 
-elapsed_time = end_time - start_time
-print(f"Execution time: {elapsed_time:.2f} seconds")
+    elapsed_time = end_time - start_time
+    print(f"Execution time: {elapsed_time:.2f} seconds")
+
+def main():
+    parser = argparse.ArgumentParser(description='Run simulations with different epsilon value and different accusation numbers')
+
+    # Add arguments
+    parser.add_argument('--epsilon', type=int, choices=[1, 10], required=True,
+                        help='Choose an epsilon value: 1 or 10')
+    parser.add_argument('--num_accusations', type=int, choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000], required=True,
+                        help='Choose a value for number of accusations')
+    
+    # Parse the arguments
+    args = parser.parse_args()
+    run_simulations(args.epsilon, args.num_accusations)
+
+if __name__ == '__main__':
+    main()
