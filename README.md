@@ -38,6 +38,7 @@ The code above only reproduce the graphs based on our provided simulation result
 ## Re-run Simulations from Scratch
 To run your own simulation data, run the ``simulation_metrics.py`` with customized parameters on command line. For example, 
 ```bash
+source venv/bin/activate
 python simulation_metrics.py --epsilon 1 --num_accusations 1 --metrics_path "metrics_e1"
 ```
 generates the ``metrics_e1_0.001K_accusations.json`` in the directory "metrics_e1". It takes around 6 hours to complete running this script. The default is to run 5 simulations with the same parameters, you may adjust the ``num_simulation`` variable according to your need. ``run_simulations.sh`` provides the parameters we used to generate simulations in the paper (running this script takes roughly two weeks). 

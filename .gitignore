@@ -1,5 +1,2 @@
 venv/
 temp/
-*.err
-*.output
-*.slurm
