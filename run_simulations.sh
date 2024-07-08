@@ -7,5 +7,6 @@ num_accusations_list=(1 2 3 4 5 6 7 8 9 10 20 30 40 50 60 70 80 90 100 200 300 4
 for num_accusations in "${num_accusations_list[@]}"
 do
     # Execute the Python script with the current value of --num_accusations
-    python simulation_metrics.py --epsilon 10 --num_accusations "$num_accusations"
+    python simulation_metrics.py --epsilon 1 --num_accusations "$num_accusations" --metrics_path "metrics_e1"
+    python simulation_metrics.py --epsilon 10 --num_accusations "$num_accusations" --metrics_path "metrics_e10"
 done
